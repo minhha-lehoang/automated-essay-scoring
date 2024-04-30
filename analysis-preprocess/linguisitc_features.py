@@ -4,6 +4,7 @@ import os
 import pandas as pd
 import numpy as np
 from string import punctuation, printable
+import re
 
 import spacy
 nlp = spacy.load("en_core_web_sm")
@@ -20,15 +21,26 @@ def count_misspelled(words):
 
 
 def get_sentences(text: str):
-    # keep only printable characters
     text = "".join(filter(lambda x: x in printable, text)).strip()
     doc = nlp(text)
     return [sent.text for sent in doc.sents]
 
+def preprocess_text(text: str):
+    text = re.sub(r'\s+', ' ', text)
+    text = "".join(filter(lambda x: x in printable, text)).strip()
+    return text
+
 
 def get_features(data_df: pd.DataFrame, output_dir='./output/data_features.csv', save=True):
-    # Number of characters
-    data_df['num_chars'] = data_df['full_text'].apply(len)
+    data_df['full_text'] = data_df['full_text'].apply(preprocess_text)
+
+    # parse the text into paragraphs
+    data_df['paragraphs'] = data_df['full_text'].apply(lambda x: x.split("\n\n"))
+    data_df['num_paragraphs'] = data_df['paragraphs'].apply(len)
+
+    # into sentences
+    data_df['sentences'] = data_df['full_text'].apply(get_sentences)
+    data_df['num_sentences'] = data_df['sentences'].apply(len)
 
     # Create lists to hold the results
     words = []
@@ -52,18 +64,6 @@ def get_features(data_df: pd.DataFrame, output_dir='./output/data_features.csv',
 
     data_df['num_words'] = data_df['words'].apply(len)
 
-    data_df['num_punctuations'] = data_df['pos'].apply(
-        lambda x: len([pos for pos in x if pos == 'PUNCT']))
-
-    data_df['num_nouns'] = data_df['pos'].apply(
-        lambda x: len([pos for pos in x if pos == 'NOUN']))
-
-    data_df['num_verbs'] = data_df['pos'].apply(
-        lambda x: len([pos for pos in x if pos == 'VERB']))
-
-    data_df['num_adverbs'] = data_df['pos'].apply(
-        lambda x: len([pos for pos in x if pos == 'ADV']))
-
     data_df['num_conjunctions'] = data_df['pos'].apply(
         lambda x: len([pos for pos in x if pos == 'CCONJ']))
 
@@ -76,10 +76,8 @@ def get_features(data_df: pd.DataFrame, output_dir='./output/data_features.csv',
     data_df['mean_word_len'] = data_df['lemma'].apply(lambda x: np.mean(
         [len(word) for word in x if word.strip() and word not in punctuation]))
 
-    data_df['sentences'] = data_df['full_text'].apply(get_sentences)
-    data_df['num_sentences'] = data_df['sentences'].apply(len)
     data_df['mean_sent_len'] = data_df['sentences'].apply(
-        lambda x: np.mean([len(sent) for sent in x]))
+        lambda x: np.mean([len([token.text for token in sent]) for sent in x]))
 
     if save:
         data_df.to_csv(output_dir, index=False)

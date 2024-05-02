@@ -11,8 +11,12 @@ nlp = spacy.load("en_core_web_sm")
 
 spell = SpellChecker()
 
+def count_misspelled(words):
+    words = [word for word in words if word.strip()]
 
+    words = set(words) - {"'s", "n't"} - set(punctuation)
 
+    return spell.unknown(words)
 
 
 def get_sentences(text: str):

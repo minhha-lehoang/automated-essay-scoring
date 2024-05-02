@@ -12,12 +12,7 @@ nlp = spacy.load("en_core_web_sm")
 spell = SpellChecker()
 
 
-def count_misspelled(words):
-    words = [word for word in words if word.strip()]
 
-    words = set(words) - {"'s", "n't"} - set(punctuation)
-
-    return spell.unknown(words)
 
 
 def get_sentences(text: str):
@@ -32,11 +27,11 @@ def preprocess_text(text: str):
 
 
 def get_features(data_df: pd.DataFrame, output_dir='./output/data_features.csv', save=True):
-    data_df['full_text'] = data_df['full_text'].apply(preprocess_text)
-
     # parse the text into paragraphs
     data_df['paragraphs'] = data_df['full_text'].apply(lambda x: x.split("\n\n"))
     data_df['num_paragraphs'] = data_df['paragraphs'].apply(len)
+
+    data_df['full_text'] = data_df['full_text'].apply(preprocess_text)
 
     # into sentences
     data_df['sentences'] = data_df['full_text'].apply(get_sentences)
@@ -77,7 +72,7 @@ def get_features(data_df: pd.DataFrame, output_dir='./output/data_features.csv',
         [len(word) for word in x if word.strip() and word not in punctuation]))
 
     data_df['mean_sent_len'] = data_df['sentences'].apply(
-        lambda x: np.mean([len([token.text for token in sent]) for sent in x]))
+        lambda x: np.mean([len([token.text for token in nlp(sent)]) for sent in x]))
 
     if save:
         data_df.to_csv(output_dir, index=False)

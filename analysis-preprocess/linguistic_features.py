@@ -169,7 +169,6 @@ def get_features_multi_levels(data_df: pd.DataFrame, column_name: str, feature_n
     data_df = get_features_in_sentences(data_df, column_name, feature_name)
     data_df[feature_name + '_in_paragraph'] = data_df.groupby(
         ['essay_id', 'paragraph'])[column_name].transform('sum')
-    FEATURES.append(feature_name + '_in_paragraph')
     data_df = get_features_in_paragraphs(
         data_df, feature_name + '_in_paragraph', feature_name)
     data_df[feature_name +
@@ -196,18 +195,13 @@ def get_features(data_df: pd.DataFrame,  save: bool = False, path: str = None):
     data_df['num_sents_in_paragraph'] = data_df.groupby(['essay_id', 'paragraph'])[
         'sentence'].transform('nunique')
     data_df = get_features_in_paragraphs(
-        data_df, 'num_sents_in_paragraph', 'num_sents')
-    data_df['num_sents_in_essay'] = data_df.groupby(['essay_id', 'paragraph', 'sentence'])[
-        'num_sents_in_paragraph'].transform('sum')
-    FEATURES.append('num_sents_in_essay')
+        data_df, 'num_sents_in_paragraph', 'num_sentences')
+    
+    data_df['num_sents_in_essay'] = data_df.groupby('essay_id')[
+        'sentence'].transform('nunique')
 
     # get number of words features
     data_df['num_words_in_sentence'] = data_df['words'].apply(len)
-    data_df = get_features_in_sentences(
-        data_df, 'num_words_in_sentence', 'num_words')
-
-    data_df['num_words_in_paragraph'] = data_df.groupby(['essay_id', 'paragraph'])[
-        'num_words_in_sentence'].transform('sum')
     data_df = get_features_multi_levels(
         data_df, 'num_words_in_sentence', 'num_words')
 

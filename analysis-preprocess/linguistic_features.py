@@ -12,7 +12,7 @@ nlp = spacy.load("en_core_web_sm")
 spell = SpellChecker()
 # corpus = set(nlp.vocab.strings)
 
-FEATURES = []
+FEATURES = set()
 
 
 def preprocess_text(text: str):
@@ -71,28 +71,28 @@ def get_tokens(data_df: pd.DataFrame):
 def get_features_in_essays(data_df: pd.DataFrame, column_name: str, feature_name: str):
     new_columns = {}
     new_columns['mean_' + feature_name +
-                '_in_essay'] = data_df[column_name].mean()
-    FEATURES.append('mean_' + feature_name + '_in_essay')
+                '_in_essay'] = data_df.copy()[column_name].mean()
+    FEATURES.add('mean_' + feature_name + '_in_essay')
 
     new_columns['std_' + feature_name +
                 '_in_essay'] = data_df[column_name].std()
-    FEATURES.append('std_' + feature_name + '_in_essay')
+    FEATURES.add('std_' + feature_name + '_in_essay')
 
     new_columns['max_' + feature_name +
                 '_in_essay'] = data_df[column_name].max()
-    FEATURES.append('max_' + feature_name + '_in_essay')
+    FEATURES.add('max_' + feature_name + '_in_essay')
 
     new_columns['min_' + feature_name +
                 '_in_essay'] = data_df[column_name].min()
-    FEATURES.append('min_' + feature_name + '_in_essay')
+    FEATURES.add('min_' + feature_name + '_in_essay')
 
     new_columns['25th_percentile_' + feature_name +
                 '_in_essay'] = np.percentile(data_df[column_name], 25)
-    FEATURES.append('25th_percentile_' + feature_name + '_in_essay')
+    FEATURES.add('25th_percentile_' + feature_name + '_in_essay')
 
     new_columns['75th_percentile_' + feature_name +
                 '_in_essay'] = np.percentile(data_df[column_name], 75)
-    FEATURES.append('75th_percentile_' + feature_name + '_in_essay')
+    FEATURES.add('75th_percentile_' + feature_name + '_in_essay')
 
     data_df = pd.concat([data_df, pd.DataFrame(new_columns)], axis=1)
 
@@ -101,31 +101,31 @@ def get_features_in_essays(data_df: pd.DataFrame, column_name: str, feature_name
 
 def get_features_in_paragraphs(data_df: pd.DataFrame, column_name: str, feature_name: str):
     new_columns = {}
-    group = data_df.groupby(['essay_id'])[column_name]
+    group = data_df.copy().groupby(['essay_id'])[column_name]
 
     new_columns['mean_' + feature_name +
                 '_in_paragraph'] = group.transform('mean')
-    FEATURES.append('mean_' + feature_name + '_in_paragraph')
+    FEATURES.add('mean_' + feature_name + '_in_paragraph')
 
     new_columns['std_' + feature_name +
                 '_in_paragraph'] = group.transform('std')
-    FEATURES.append('std_' + feature_name + '_in_paragraph')
+    FEATURES.add('std_' + feature_name + '_in_paragraph')
 
     new_columns['max_' + feature_name +
                 '_in_paragraph'] = group.transform('max')
-    FEATURES.append('max_' + feature_name + '_in_paragraph')
+    FEATURES.add('max_' + feature_name + '_in_paragraph')
 
     new_columns['min_' + feature_name +
                 '_in_paragraph'] = group.transform('min')
-    FEATURES.append('min_' + feature_name + '_in_paragraph')
+    FEATURES.add('min_' + feature_name + '_in_paragraph')
 
     new_columns['25th_percentile_' + feature_name +
                 '_in_paragraph'] = group.transform(lambda x: np.percentile(x, 25))
-    FEATURES.append('25th_percentile_' + feature_name + '_in_paragraph')
+    FEATURES.add('25th_percentile_' + feature_name + '_in_paragraph')
 
     new_columns['75th_percentile_' + feature_name +
                 '_in_paragraph'] = group.transform(lambda x: np.percentile(x, 75))
-    FEATURES.append('75th_percentile_' + feature_name + '_in_paragraph')
+    FEATURES.add('75th_percentile_' + feature_name + '_in_paragraph')
 
     data_df = pd.concat([data_df, pd.DataFrame(new_columns)], axis=1)
 
@@ -134,31 +134,31 @@ def get_features_in_paragraphs(data_df: pd.DataFrame, column_name: str, feature_
 
 def get_features_in_sentences(data_df: pd.DataFrame, column_name: str, feature_name: str):
     new_columns = {}
-    group = data_df.groupby(['essay_id'])[column_name]
+    group = data_df.copy().groupby(['essay_id'])[column_name]
 
     new_columns['mean_' + feature_name +
                 '_in_sentence'] = group.transform('mean')
-    FEATURES.append('mean_' + feature_name + '_in_sentence')
+    FEATURES.add('mean_' + feature_name + '_in_sentence')
 
     new_columns['std_' + feature_name +
                 '_in_sentence'] = group.transform('std')
-    FEATURES.append('std_' + feature_name + '_in_sentence')
+    FEATURES.add('std_' + feature_name + '_in_sentence')
 
     new_columns['max_' + feature_name +
                 '_in_sentence'] = group.transform('max')
-    FEATURES.append('max_' + feature_name + '_in_sentence')
+    FEATURES.add('max_' + feature_name + '_in_sentence')
 
     new_columns['min_' + feature_name +
                 '_in_sentence'] = group.transform('min')
-    FEATURES.append('min_' + feature_name + '_in_sentence')
+    FEATURES.add('min_' + feature_name + '_in_sentence')
 
     new_columns['25th_percentile_' + feature_name +
                 '_in_sentence'] = group.transform(lambda x: np.percentile(x, 25))
-    FEATURES.append('25th_percentile_' + feature_name + '_in_sentence')
+    FEATURES.add('25th_percentile_' + feature_name + '_in_sentence')
 
     new_columns['75th_percentile_' + feature_name +
                 '_in_sentence'] = group.transform(lambda x: np.percentile(x, 75))
-    FEATURES.append('75th_percentile_' + feature_name + '_in_sentence')
+    FEATURES.add('75th_percentile_' + feature_name + '_in_sentence')
 
     data_df = pd.concat([data_df, pd.DataFrame(new_columns)], axis=1)
 
@@ -173,13 +173,15 @@ def get_features_multi_levels(data_df: pd.DataFrame, column_name: str, feature_n
         data_df, feature_name + '_in_paragraph', feature_name)
     data_df[feature_name +
             '_in_essay'] = data_df.groupby('essay_id')[column_name].transform('sum')
-    FEATURES.append(feature_name + '_in_essay')
+    FEATURES.add(feature_name + '_in_essay')
 
     return data_df
 
 
 def get_features(data_df: pd.DataFrame,  save: bool = False, path: str = None):
     data_df = get_paragraphs(data_df).explode('paragraph')
+
+    data_df['full_text'] = data_df['full_text'].apply(preprocess_text)
 
     data_df = get_sentences(data_df).explode('sentence')
 
@@ -189,7 +191,7 @@ def get_features(data_df: pd.DataFrame,  save: bool = False, path: str = None):
     # get paragraph features
     data_df['num_paragraphs'] = data_df.groupby(
         'essay_id')['paragraph'].transform('nunique')
-    FEATURES.append('num_paragraphs')
+    FEATURES.add('num_paragraphs')
 
     # get number of sentences features
     data_df['num_sents_in_paragraph'] = data_df.groupby(['essay_id', 'paragraph'])[
@@ -210,12 +212,6 @@ def get_features(data_df: pd.DataFrame,  save: bool = False, path: str = None):
         lambda x: np.mean([len(word) for word in x]))
     data_df = get_features_multi_levels(
         data_df, 'mean_word_lens_in_sentence', 'mean_word_lens')
-
-    # get number of stopwords features
-    data_df['num_stopwords_in_sentence'] = data_df['is_stop'].apply(
-        lambda x: np.count_nonzero(x))
-    data_df = get_features_multi_levels(
-        data_df, 'num_stopwords_in_sentence', 'num_stopwords')
 
     # get number of proper nouns features
     data_df['num_proper_nouns_in_sentence'] = data_df['pos'].apply(
@@ -259,20 +255,18 @@ def get_features(data_df: pd.DataFrame,  save: bool = False, path: str = None):
     data_df = get_features_multi_levels(
         data_df, 'num_conjunctions_in_sentence', 'num_conjunctions')
 
-    # get number of determiners features
-    data_df['num_determiners_in_sentence'] = data_df['pos'].apply(
-        lambda x: np.count_nonzero(['DET' in pos for pos in x]))
-    data_df = get_features_multi_levels(
-        data_df, 'num_determiners_in_sentence', 'num_determiners')
-
     # get number of misspelled words features
     data_df['num_misspelled_words_in_sentence'] = data_df['lemmas'].apply(
         lambda x: is_misspelled(x))
     data_df = get_features_multi_levels(
         data_df, 'num_misspelled_words_in_sentence', 'num_misspelled_words')
 
-    data_df = data_df[['essay_id', 'full_text',
+    if 'score' in data_df.columns:
+        data_df = data_df[['essay_id', 'full_text',
                        'score', 'paragraph', 'sentence'] + FEATURES]
+    else:
+        data_df = data_df[['essay_id', 'full_text',
+                       'paragraph', 'sentence'] + FEATURES]
 
     data_df = data_df.drop_duplicates()
 

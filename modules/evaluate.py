@@ -13,10 +13,13 @@ def evaluate(model, criterion, dataloader, device):
     predictions = []
 
     with torch.no_grad():
-        for token_ids, attention_mask, features, score in dataloader:
-            output = model(token_ids.to(device),
-                           attention_mask.to(device),
-                           features.to(device))
+        for (ling_features, essay_token_ids, essay_attention_mask,
+                sentence_token_ids, sentence_attention_mask, score) in dataloader:
+            output = model(ling_features.to(device),
+                            essay_token_ids.to(device),
+                            essay_attention_mask.to(device),
+                            sentence_token_ids.to(device),
+                            sentence_attention_mask.to(device))
 
             loss = criterion(output, score.to(device)).float()
 

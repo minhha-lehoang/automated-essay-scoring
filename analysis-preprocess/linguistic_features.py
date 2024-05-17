@@ -69,32 +69,29 @@ def get_tokens(data_df: pd.DataFrame):
 
 
 def get_features_in_essays(data_df: pd.DataFrame, column_name: str, feature_name: str):
+    group = data_df.copy()
     new_columns = {}
     new_columns['mean_' + feature_name +
-                '_in_essay'] = data_df.copy()[column_name].mean()
+                '_in_essay'] = group[column_name].mean()
     FEATURES.add('mean_' + feature_name + '_in_essay')
 
-    new_columns['std_' + feature_name +
-                '_in_essay'] = data_df[column_name].std()
-    FEATURES.add('std_' + feature_name + '_in_essay')
-
     new_columns['max_' + feature_name +
-                '_in_essay'] = data_df[column_name].max()
+                '_in_essay'] = group[column_name].max()
     FEATURES.add('max_' + feature_name + '_in_essay')
 
     new_columns['min_' + feature_name +
-                '_in_essay'] = data_df[column_name].min()
+                '_in_essay'] = group[column_name].min()
     FEATURES.add('min_' + feature_name + '_in_essay')
 
     new_columns['25th_percentile_' + feature_name +
-                '_in_essay'] = np.percentile(data_df[column_name], 25)
+                '_in_essay'] = np.percentile(group[column_name], 25)
     FEATURES.add('25th_percentile_' + feature_name + '_in_essay')
 
     new_columns['75th_percentile_' + feature_name +
-                '_in_essay'] = np.percentile(data_df[column_name], 75)
+                '_in_essay'] = np.percentile(group[column_name], 75)
     FEATURES.add('75th_percentile_' + feature_name + '_in_essay')
 
-    data_df = pd.concat([data_df, pd.DataFrame(new_columns)], axis=1)
+    data_df = pd.add([data_df, pd.DataFrame(new_columns)], axis=1)
 
     return data_df
 
@@ -106,10 +103,6 @@ def get_features_in_paragraphs(data_df: pd.DataFrame, column_name: str, feature_
     new_columns['mean_' + feature_name +
                 '_in_paragraph'] = group.transform('mean')
     FEATURES.add('mean_' + feature_name + '_in_paragraph')
-
-    new_columns['std_' + feature_name +
-                '_in_paragraph'] = group.transform('std')
-    FEATURES.add('std_' + feature_name + '_in_paragraph')
 
     new_columns['max_' + feature_name +
                 '_in_paragraph'] = group.transform('max')
@@ -139,10 +132,6 @@ def get_features_in_sentences(data_df: pd.DataFrame, column_name: str, feature_n
     new_columns['mean_' + feature_name +
                 '_in_sentence'] = group.transform('mean')
     FEATURES.add('mean_' + feature_name + '_in_sentence')
-
-    new_columns['std_' + feature_name +
-                '_in_sentence'] = group.transform('std')
-    FEATURES.add('std_' + feature_name + '_in_sentence')
 
     new_columns['max_' + feature_name +
                 '_in_sentence'] = group.transform('max')
@@ -260,20 +249,30 @@ def get_features(data_df: pd.DataFrame,  save: bool = False, path: str = None):
         lambda x: is_misspelled(x))
     data_df = get_features_multi_levels(
         data_df, 'num_misspelled_words_in_sentence', 'num_misspelled_words')
-
-    if 'score' in data_df.columns:
-        data_df = data_df[['essay_id', 'full_text',
-                       'score', 'paragraph', 'sentence'] + FEATURES]
-    else:
-        data_df = data_df[['essay_id', 'full_text',
-                       'paragraph', 'sentence'] + FEATURES]
+    
+    # get number of unique words features
+    data_df['num_unique_words_in_sentence'] = data_df['lemmas'].apply(
+        lambda x: len(set(x)))
+    data_df = get_features_multi_levels(
+        data_df, 'num_unique_words_in_sentence', 'num_unique_words')
+    
+    # get number of stop words features
+    data_df['num_stop_words_in_sentence'] = data_df['is_stop'].apply(
+        lambda x: np.count_nonzero(x))
+    data_df = get_features_multi_levels(
+        data_df, 'num_stop_words_in_sentence', 'num_stop_words')
+    
+    data_df = data_df[['essay_id', 'full_text',
+                       'score', 'sentence'] + sorted(list(FEATURES))]
 
     data_df = data_df.drop_duplicates()
+
+#     print(data_df.shape, data_df[['essay_id', 'full_text',  'score'] + list(FEATURES)].drop_duplicates().shape)
 
     if save:
         data_df.to_csv(path, index=False)
         with open(os.path.join(os.path.dirname(path), 'features.txt'), 'w') as f:
-            for item in FEATURES:
+            for item in sorted(FEATURES):
                 f.write("%s\n" % item)
 
     return data_df, FEATURES

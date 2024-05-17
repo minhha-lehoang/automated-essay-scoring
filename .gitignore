@@ -160,3 +160,4 @@ cython_debug/
 #.idea/
 *.pth
 aes-2-0-kerasnlp-starter.ipynb
+checkpoints/

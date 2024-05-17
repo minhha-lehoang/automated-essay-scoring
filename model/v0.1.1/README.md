@@ -1,1 +1,1 @@
-The model v0.1: essay embedding (unfreeze pooler) + linguistic features + more linear layers + regression head.
+The model v0.1.1: essay embedding (unfreeze pooler) + linguistic features + more linear layers + regression head.

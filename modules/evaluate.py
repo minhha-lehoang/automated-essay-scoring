@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 def logit_to_score(logit, min_score=1, max_score=6):
     scores = torch.clamp(torch.round(logit), min_score, max_score)
@@ -31,4 +32,4 @@ def evaluate(model, criterion, dataloader, device):
 
 #             break
 
-    return running_loss / len(dataloader), torch.tensor(all_scores), torch.tensor(predictions)
+    return running_loss / len(dataloader), torch.tensor(np.array(all_scores)), torch.tensor(np.array(predictions))

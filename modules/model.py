@@ -22,9 +22,9 @@ class SemanticModule(nn.Module):
         # freeze
         for param in essay_encoder.parameters():
             param.requires_grad = False
-        # unfreeze the pooler
-        for param in essay_encoder.pooler.parameters():
-            param.requires_grad = True
+        # # unfreeze the pooler
+        # for param in essay_encoder.pooler.parameters():
+        #     param.requires_grad = True
 
         self.essay_encoder = essay_encoder
         self.dropout = torch.nn.Dropout(dropout)
@@ -70,29 +70,32 @@ class LSCModel(nn.Module):
         self.semantic_module = SemanticModule(essay_encoder, dropout=dropout)
         self.coherence_module = CoherenceModule(
             sentence_encoder, dropout=dropout)
+        
+        self.fc = nn.Linear(
+            hidden_lf_size + essay_encoder.config.hidden_size + sentence_encoder.config.hidden_size, 768)
 
-        self.regressor = nn.Linear(
-            hidden_lf_size + essay_encoder.config.hidden_size + sentence_encoder.config.hidden_size, 1)
+        self.regressor = nn.Linear(768, 1)
+
+        self.dropout = nn.Dropout(dropout)
 
     def forward(self, ling_features, essay_token_ids, essay_attention_mask,
                 sentence_token_ids, sentence_attention_mask):
         ling_outputs = self.linguistic_module(ling_features)
-#         print(ling_outputs.shape)
 
         sem_outputs = self.semantic_module(essay_token_ids, essay_attention_mask)
-#         print(sem_outputs.shape)
 
-#         print(sentence_token_ids.shape)
         coh_outputs = self.coherence_module(sentence_token_ids.view(-1, sentence_token_ids.shape[-1]), 
                                             sentence_attention_mask.view(-1, sentence_attention_mask.shape[-1]))
-#         print(coh_outputs.shape)
 
         coh_infor = coh_outputs.view(-1, sentence_token_ids.size(1), coh_outputs.size(-1))
-#         print(coh_infor.shape)
         coh_infor, _ = torch.max(coh_infor, dim=1)
-#         print(coh_infor.shape)
 
         outputs = torch.cat([ling_outputs, sem_outputs, coh_infor], dim=-1)
+
+        outputs = self.fc(outputs)
+        outputs = F.leaky_relu(outputs)
+        outputs = self.dropout(outputs)
+
         outputs = self.regressor(outputs)
 
         return outputs

@@ -1,1 +1,0 @@
-The model v0.1: essay embedding + linguistic features + regression head.

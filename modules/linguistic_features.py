@@ -262,8 +262,11 @@ def get_features(data_df: pd.DataFrame,  save: bool = False, path: str = None):
     data_df = get_features_multi_levels(
         data_df, 'num_stop_words_in_sentence', 'num_stop_words')
     
-    data_df = data_df[['essay_id', 'full_text',
+    if 'score' in data_df.columns:
+        data_df = data_df[['essay_id', 'full_text',
                        'score', 'sentence'] + sorted(list(FEATURES))]
+    else:
+        data_df = data_df[['essay_id', 'full_text', 'sentence'] + sorted(list(FEATURES))]
 
     data_df = data_df.drop_duplicates()
 

@@ -1,1 +1,3 @@
-# automated-essay-scoring
+# Leveraging Deep Neural Networks and Feature Fusion in Automated Essay Assessment
+
+In this project, we developed an AES system using a hybrid framework that combines deep neural networks with feature fusion techniques. Our model, LSC, integrates linguistic, semantic, and coherence features to evaluate essays accurately on a scale of 1 to 6. By leveraging hand-crafted linguistic features, word embeddings for semantic analysis, and transformer-based models for coherence, our approach effectively mimics human grading. Experimental results show that this multi-faceted method significantly enhances AES performance, offering a scalable, efficient alternative to manual grading and providing timely feedback to support better educational outcomes.
